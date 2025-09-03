@@ -1,0 +1,321 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>偶数・奇数の式完成クイズゲーム</title>
+<style>
+  :root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --dark-color: #2c3e50;
+    --light-color: #ecf0f1;
+    --success-color: #27ae60;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333; padding: 16px; min-height: 100vh;
+  }
+  .game-container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);}
+  .header { text-align: center; margin-bottom: 30px;}
+  .header h1 { font-size: 28px; color: var(--dark-color); margin: 0 0 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);}
+  .subtitle { font-size: 16px; color: #7f8c8d; margin-bottom: 20px;}
+  .game-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 30px; flex-wrap: wrap;}
+  .stat-item { background: var(--light-color); padding: 15px 25px; border-radius: 25px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-width: 120px; text-align: center;}
+  .timer { background: var(--warning-color); color: white; animation: pulse 2s infinite;}
+  @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+  .score { background: var(--success-color); color: white;}
+  .accuracy { background: var(--primary-color); color: white;}
+  .problem-area { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 20px; padding: 40px; margin-bottom: 30px; text-align: center; color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.15);}
+  .current-number { font-size: 80px; font-weight: bold; margin-bottom: 20px; text-shadow: 3px 3px 6px rgba(0,0,0,0.3); animation: numberAppear 0.8s ease-out;}
+  @keyframes numberAppear { from { transform: scale(0.5) rotate(-10deg); opacity: 0; } to { transform: scale(1) rotate(0deg); opacity: 1; } }
+  .question-text { font-size: 24px; margin-bottom: 30px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);}
+  .formula-container { display: flex; justify-content: center; gap: 40px; margin-bottom: 30px; flex-wrap: wrap;}
+  .formula-option { background: rgba(255,255,255,0.95); color: var(--dark-color); padding: 25px 35px; border-radius: 15px; font-size: 32px; font-weight: bold; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2); border: 4px solid transparent; min-width: 200px; display: flex; align-items: center; justify-content: center;}
+  .formula-option:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(0,0,0,0.3); border-color: var(--primary-color);}
+  .formula-option.selected { background: var(--secondary-color); color: white; border-color: var(--success-color); transform: scale(1.05);}
+  .input-area { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 30px; margin-top: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.2);}
+  .input-container { display: flex; align-items: center; justify-content: center; gap: 15px; font-size: 36px; font-weight: bold; color: var(--dark-color); margin-bottom: 20px;}
+  .formula-display { display: flex; align-items: center; gap: 10px;}
+  .number-input { width: 100px; height: 80px; font-size: 36px; font-weight: bold; text-align: center; border: 4px solid var(--primary-color); border-radius: 15px; background: white; color: var(--dark-color); outline: none; transition: all 0.3s ease;}
+  .number-input:focus { border-color: var(--secondary-color); box-shadow: 0 0 20px rgba(46,204,113,0.3); transform: scale(1.05);}
+  .number-input.correct { border-color: var(--success-color); background: #d5f4e6; animation: correctInput 0.6s;}
+  .number-input.incorrect { border-color: var(--danger-color); background: #fdf2f2; animation: incorrectInput 0.6s;}
+  @keyframes correctInput { 0%{transform:scale(1);} 50%{transform:scale(1.1); background: var(--success-color); color: white;} 100%{transform:scale(1);} }
+  @keyframes incorrectInput { 0%,100%{transform:translateX(0);} 25%,75%{transform:translateX(-10px);} 50%{transform:translateX(10px);} }
+  .submit-btn { background: linear-gradient(135deg, var(--secondary-color), var(--success-color)); color: white; border: none; padding: 15px 40px; font-size: 20px; font-weight: bold; border-radius: 25px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.2);}
+  .submit-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3);}
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none;}
+  .controls { text-align: center; margin-top: 30px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;}
+  .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 20px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
+  .btn-start { background: linear-gradient(135deg, var(--primary-color), #2980b9); color: white;}
+  .btn-reset { background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white;}
+  .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3);}
+  .feedback { margin-top: 20px; padding: 20px; border-radius: 15px; font-size: 18px; font-weight: bold; text-align: center; transition: all 0.5s ease; opacity: 0; transform: translateY(20px);}
+  .feedback.show { opacity: 1; transform: translateY(0);}
+  .feedback.correct { background: #d5f4e6; color: var(--success-color); border: 2px solid var(--success-color);}
+  .feedback.incorrect { background: #fdf2f2; color: var(--danger-color); border: 2px solid var(--danger-color);}
+  .explanation { margin-top: 15px; font-size: 16px; font-weight: normal; line-height: 1.6;}
+  .game-over { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(5px);}
+  .game-over.show { display: flex;}
+  .modal { background: white; padding: 50px; border-radius: 25px; text-align: center; max-width: 600px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.3);}
+  .final-score { font-size: 60px; font-weight: bold; color: var(--success-color); margin: 25px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.1);}
+  .performance-message { font-size: 24px; margin: 20px 0; font-weight: bold;}
+  .excellent { color: #f39c12; }
+  .good { color: #3498db; }
+  .keep-trying { color: #e67e22; }
+  @media (max-width: 768px) {
+    .game-container { padding: 20px;}
+    .current-number { font-size: 60px;}
+    .formula-option { font-size: 24px; padding: 20px 25px; min-width: 150px;}
+    .number-input { width: 80px; height: 60px; font-size: 28px;}
+    .input-container { font-size: 28px;}
+  }
+</style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="header">
+      <h1>🧮 偶数・奇数の式完成クイズ</h1>
+      <div class="subtitle">数字を見て、正しい式を完成させよう！</div>
+    </div>
+    <div class="game-stats">
+      <div class="stat-item timer">⏰ <span id="timeLeft">60</span>秒</div>
+      <div class="stat-item score">🏆 <span id="score">0</span>点</div>
+      <div class="stat-item accuracy">📊 <span id="accuracy">100</span>%</div>
+      <div class="stat-item">📝 <span id="progress">0/10</span></div>
+    </div>
+    <div class="problem-area" id="problemArea" style="display:none;">
+      <div class="current-number" id="currentNumber">--</div>
+      <div class="question-text">この数字は偶数？奇数？正しい式を選んで完成させよう！</div>
+      <div class="formula-container">
+        <div class="formula-option" id="evenOption"><span>偶数: 2 × □</span></div>
+        <div class="formula-option" id="oddOption"><span>奇数: 2 × □ + 1</span></div>
+      </div>
+      <div class="input-area" id="inputArea" style="display:none;">
+        <div class="input-container">
+          <div class="formula-display">
+            <span id="selectedFormula">2 × </span>
+            <input type="number" id="numberInput" class="number-input" min="0" max="50" placeholder="?">
+            <span id="formulaEnd"></span>
+            <span> = </span>
+            <span id="currentNumberDisplay">--</span>
+          </div>
+        </div>
+        <button class="submit-btn" id="submitBtn">答えを確認</button>
+      </div>
+      <div class="feedback" id="feedback">
+        <div id="feedbackText"></div>
+        <div class="explanation" id="explanation"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-start" id="startBtn">🎮 ゲーム開始</button>
+      <button class="btn btn-reset" id="resetBtn">🔄 リセット</button>
+      <button class="btn btn-start" id="nextBtn" style="display:none;">➡️ 次の問題</button>
+    </div>
+  </div>
+  <div class="game-over" id="gameOver">
+    <div class="modal">
+      <h2>🎉 ゲーム終了！</h2>
+      <div class="final-score" id="finalScore">0点</div>
+      <div class="performance-message" id="performanceMessage"></div>
+      <div id="gameStats"></div>
+      <button class="btn btn-start" onclick="resetGame()">もう一度プレイ</button>
+    </div>
+  </div>
+<script>
+  const CONFIG = { TIME_LIMIT: 60, TOTAL_PROBLEMS: 10, MIN_NUMBER: 10, MAX_NUMBER: 100, POINTS_PER_CORRECT: 10 };
+  let gameState = { timeLeft: CONFIG.TIME_LIMIT, score: 0, currentProblem: 0, correctAnswers: 0, totalAttempts: 0, isActive: false, timer: null, currentNumber: 0, selectedType: null, problems: [] };
+  const elements = {
+    timeLeft: document.getElementById('timeLeft'),
+    score: document.getElementById('score'),
+    accuracy: document.getElementById('accuracy'),
+    progress: document.getElementById('progress'),
+    problemArea: document.getElementById('problemArea'),
+    currentNumber: document.getElementById('currentNumber'),
+    currentNumberDisplay: document.getElementById('currentNumberDisplay'),
+    evenOption: document.getElementById('evenOption'),
+    oddOption: document.getElementById('oddOption'),
+    inputArea: document.getElementById('inputArea'),
+    selectedFormula: document.getElementById('selectedFormula'),
+    formulaEnd: document.getElementById('formulaEnd'),
+    numberInput: document.getElementById('numberInput'),
+    submitBtn: document.getElementById('submitBtn'),
+    feedback: document.getElementById('feedback'),
+    feedbackText: document.getElementById('feedbackText'),
+    explanation: document.getElementById('explanation'),
+    startBtn: document.getElementById('startBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    gameOver: document.getElementById('gameOver'),
+    finalScore: document.getElementById('finalScore'),
+    performanceMessage: document.getElementById('performanceMessage'),
+    gameStats: document.getElementById('gameStats')
+  };
+  function generateProblems() {
+    const problems = [];
+    for (let i = 0; i < CONFIG.TOTAL_PROBLEMS; i++) {
+      const number = Math.floor(Math.random() * (CONFIG.MAX_NUMBER - CONFIG.MIN_NUMBER + 1)) + CONFIG.MIN_NUMBER;
+      problems.push(number);
+    }
+    return problems;
+  }
+  function isEven(number) { return number % 2 === 0; }
+  function getQuotient(number) { return Math.floor(number / 2); }
+  function updateUI() {
+    elements.timeLeft.textContent = gameState.timeLeft;
+    elements.score.textContent = gameState.score;
+    elements.progress.textContent = `${gameState.currentProblem}/${CONFIG.TOTAL_PROBLEMS}`;
+    const accuracy = gameState.totalAttempts > 0 ? Math.round((gameState.correctAnswers / gameState.totalAttempts) * 100) : 100;
+    elements.accuracy.textContent = accuracy;
+  }
+  function showCurrentProblem() {
+    if (gameState.currentProblem >= gameState.problems.length) { endGame(); return; }
+    gameState.currentNumber = gameState.problems[gameState.currentProblem];
+    elements.currentNumber.textContent = gameState.currentNumber;
+    elements.currentNumberDisplay.textContent = gameState.currentNumber;
+    elements.problemArea.style.display = 'block';
+    elements.inputArea.style.display = 'none';
+    elements.feedback.classList.remove('show');
+    elements.nextBtn.style.display = 'none';
+    elements.evenOption.classList.remove('selected');
+    elements.oddOption.classList.remove('selected');
+    elements.numberInput.value = '';
+    elements.numberInput.className = 'number-input';
+    gameState.selectedType = null;
+    updateUI();
+  }
+  function selectFormulaType(type) {
+    gameState.selectedType = type;
+    elements.evenOption.classList.remove('selected');
+    elements.oddOption.classList.remove('selected');
+    if (type === 'even') {
+      elements.evenOption.classList.add('selected');
+      elements.selectedFormula.textContent = '2 × ';
+      elements.formulaEnd.textContent = '';
+    } else {
+      elements.oddOption.classList.add('selected');
+      elements.selectedFormula.textContent = '2 × ';
+      elements.formulaEnd.textContent = ' + 1';
+    }
+    elements.inputArea.style.display = 'block';
+    elements.numberInput.focus();
+  }
+  function checkAnswer() {
+    const inputValue = parseInt(elements.numberInput.value);
+    if (isNaN(inputValue) || inputValue < 0) {
+      alert('正しい数字を入力してください！');
+      return;
+    }
+    gameState.totalAttempts++;
+    const actualIsEven = isEven(gameState.currentNumber);
+    const actualQuotient = getQuotient(gameState.currentNumber);
+    let isCorrect = false;
+    let correctFormula = '';
+    let explanation = '';
+    if (actualIsEven) {
+      correctFormula = `${gameState.currentNumber} = 2 × ${actualQuotient}`;
+      explanation = `${gameState.currentNumber}は偶数です。2で割ると${actualQuotient}になり、余りは0です。`;
+      isCorrect = (gameState.selectedType === 'even' && inputValue === actualQuotient);
+    } else {
+      correctFormula = `${gameState.currentNumber} = 2 × ${actualQuotient} + 1`;
+      explanation = `${gameState.currentNumber}は奇数です。2で割ると${actualQuotient}余り1になります。`;
+      isCorrect = (gameState.selectedType === 'odd' && inputValue === actualQuotient);
+    }
+    elements.feedback.classList.add('show');
+    if (isCorrect) {
+      gameState.correctAnswers++;
+      gameState.score += CONFIG.POINTS_PER_CORRECT;
+      elements.numberInput.classList.add('correct');
+      elements.feedback.className = 'feedback show correct';
+      elements.feedbackText.textContent = '🎉 正解！';
+      elements.explanation.innerHTML = `<strong>正しい式：</strong> ${correctFormula}<br>${explanation}`;
+    } else {
+      elements.numberInput.classList.add('incorrect');
+      elements.feedback.className = 'feedback show incorrect';
+      elements.feedbackText.textContent = '❌ 不正解...';
+      let wrongReason = '';
+      if (gameState.selectedType !== (actualIsEven ? 'even' : 'odd')) {
+        wrongReason = `まず偶数か奇数かの判断が間違っています。`;
+      } else {
+        wrongReason = `式の種類は正しいですが、□に入る数字が違います。`;
+      }
+      elements.explanation.innerHTML = `${wrongReason}<br><strong>正しい式：</strong> ${correctFormula}<br>${explanation}`;
+    }
+    elements.submitBtn.disabled = true;
+    elements.nextBtn.style.display = 'inline-block';
+    updateUI();
+  }
+  function nextProblem() {
+    gameState.currentProblem++;
+    showCurrentProblem();
+    elements.submitBtn.disabled = false;
+  }
+  function startTimer() {
+    gameState.timer = setInterval(() => {
+      gameState.timeLeft--;
+      updateUI();
+      if (gameState.timeLeft <= 0) { endGame(); }
+    }, 1000);
+  }
+  function endGame() {
+    gameState.isActive = false;
+    clearInterval(gameState.timer);
+    const accuracy = gameState.totalAttempts > 0 ? Math.round((gameState.correctAnswers / gameState.totalAttempts) * 100) : 100;
+    elements.finalScore.textContent = gameState.score + '点';
+    let performanceClass = '', performanceText = '';
+    if (accuracy >= 90) { performanceClass = 'excellent'; performanceText = '素晴らしい！完璧です！🌟'; }
+    else if (accuracy >= 70) { performanceClass = 'good'; performanceText = 'よくできました！👏'; }
+    else { performanceClass = 'keep-trying'; performanceText = 'もう少し練習してみよう！💪'; }
+    elements.performanceMessage.className = `performance-message ${performanceClass}`;
+    elements.performanceMessage.textContent = performanceText;
+    elements.gameStats.innerHTML = `
+      <p><strong>正解数:</strong> ${gameState.correctAnswers} / ${gameState.totalAttempts}</p>
+      <p><strong>正解率:</strong> ${accuracy}%</p>
+      <p><strong>問題数:</strong> ${gameState.currentProblem} / ${CONFIG.TOTAL_PROBLEMS}</p>
+      <p><strong>残り時間:</strong> ${gameState.timeLeft}秒</p>
+    `;
+    elements.gameOver.classList.add('show');
+  }
+  function startGame() {
+    if (gameState.isActive) return;
+    gameState = {
+      timeLeft: CONFIG.TIME_LIMIT, score: 0, currentProblem: 0, correctAnswers: 0, totalAttempts: 0, isActive: true,
+      timer: null, currentNumber: 0, selectedType: null, problems: generateProblems()
+    };
+    elements.gameOver.classList.remove('show');
+    elements.startBtn.disabled = true;
+    elements.startBtn.textContent = 'プレイ中...';
+    showCurrentProblem();
+    startTimer();
+  }
+  function resetGame() {
+    gameState.isActive = false;
+    clearInterval(gameState.timer);
+    elements.problemArea.style.display = 'none';
+    elements.gameOver.classList.remove('show');
+    gameState = {
+      timeLeft: CONFIG.TIME_LIMIT, score: 0, currentProblem: 0, correctAnswers: 0, totalAttempts: 0, isActive: false,
+      timer: null, currentNumber: 0, selectedType: null, problems: []
+    };
+    updateUI();
+    elements.startBtn.disabled = false;
+    elements.startBtn.textContent = '🎮 ゲーム開始';
+  }
+  elements.startBtn.addEventListener('click', startGame);
+  elements.resetBtn.addEventListener('click', resetGame);
+  elements.nextBtn.addEventListener('click', nextProblem);
+  elements.submitBtn.addEventListener('click', checkAnswer);
+  elements.evenOption.addEventListener('click', () => selectFormulaType('even'));
+  elements.oddOption.addEventListener('click', () => selectFormulaType('odd'));
+  elements.numberInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !elements.submitBtn.disabled) { checkAnswer(); }
+  });
+  updateUI();
+</script>
+</body>
+</html>
